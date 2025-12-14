@@ -1,15 +1,7 @@
-# Python
 __pycache__/
 *.pyc
-
-# Django
 db.sqlite3
-
-# Virtual env
+.env
 venv/
-
-# VSCode
+.idea/
 .vscode/
-
-# macOS
-.DS_Store
