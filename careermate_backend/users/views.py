@@ -7,6 +7,10 @@ from django.utils.decorators import method_decorator
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer
+from rest_framework.permissions import IsAuthenticated
+from .models import Profile
+from .serializers import ProfileSerializer
+
 #User
 class UserListAPI(APIView):
     def get(self, request):
@@ -50,4 +54,21 @@ class LoginAPI(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
 
+class ProfileAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def post(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
