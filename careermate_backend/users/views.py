@@ -1,3 +1,4 @@
+import PyPDF2
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +8,11 @@ from django.utils.decorators import method_decorator
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
+from .models import CVAnalysis
+from .serializers import CVAnalysisSerializer
+
 #User
 class UserListAPI(APIView):
     def get(self, request):
@@ -18,11 +24,26 @@ class UserListAPI(APIView):
 class RegisterAPI(APIView):
     def post(self, request):
         data = request.data
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
+
+        if not username or not password:
+            return Response(
+                {"error": "username and password are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "Username already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = User.objects.create_user(
-            username=data['username'],
-            email=data['email'],
-            password=data['password']
+            username=username,
+            email=email,
+            password=password
         )
 
         return Response(
@@ -50,4 +71,47 @@ class LoginAPI(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
 
+
+class CVUploadAnalyzeAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if 'cv_file' not in request.FILES:
+            return Response(
+                {"error": "cv_file is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        cv_file = request.FILES['cv_file']
+
+        # đọc PDF
+        reader = PyPDF2.PdfReader(cv_file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+
+        # demo phân tích
+        analysis_result = {
+            "skills": ["Python", "Django"],
+            "summary": "Demo CV analysis"
+        }
+
+        
+        user = request.user
+
+        cv = CVAnalysis.objects.create(
+            user=request.user,
+            cv_file=cv_file,
+            extracted_text=text,
+            skills_found="Python, Django",
+            score=20
+        )
+
+        return Response(
+            {
+                "message": "CV analyzed successfully",
+                "analysis": analysis_result
+            },
+            status=status.HTTP_200_OK
+        )
 

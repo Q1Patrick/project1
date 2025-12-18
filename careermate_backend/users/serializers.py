@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User
+from .models import CVAnalysis
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,3 +21,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+class CVAnalysisSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CVAnalysis
+        fields = '__all__'
+        read_only_fields = ['user', 'extracted_text', 'skills_found', 'score', 'created_at']
