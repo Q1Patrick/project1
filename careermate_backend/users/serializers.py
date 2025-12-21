@@ -1,11 +1,12 @@
 from rest_framework import serializers
-from .models import User
-from .models import CVAnalysis
+from .models import User, Profile, CVAnalysis
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -22,8 +23,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
+        read_only_fields = ['user']
+
+
 class CVAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = CVAnalysis
         fields = '__all__'
-        read_only_fields = ['user', 'extracted_text', 'skills_found', 'score', 'created_at']
+        read_only_fields = [
+            'user',
+            'extracted_text',
+            'skills_found',
+            'score',
+            'created_at'
+        ]
