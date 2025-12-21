@@ -12,6 +12,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from .models import CVAnalysis
 from .serializers import CVAnalysisSerializer
+from rest_framework.permissions import IsAdminUser
+from .models import Post, CVTemplate
+from .serializers import PostSerializer, CVTemplateSerializer
 
 #User
 class UserListAPI(APIView):
@@ -115,3 +118,67 @@ class CVUploadAnalyzeAPI(APIView):
             status=status.HTTP_200_OK
         )
 
+class PostAdminAPI(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        posts = Post.objects.all()
+        return Response(PostSerializer(posts, many=True).data)
+
+    def post(self, request):
+        serializer = PostSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+class PostDetailAdminAPI(APIView):
+    permission_classes = [IsAdminUser]
+
+    def put(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        serializer = PostSerializer(post, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):
+        Post.objects.get(pk=pk).delete()
+        return Response(status=204)
+    
+class PostPublicAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        posts = Post.objects.filter(is_published=True)
+        return Response(PostSerializer(posts, many=True).data)
+
+class CVTemplateAdminAPI(APIView):
+    permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        templates = CVTemplate.objects.all()
+        return Response(CVTemplateSerializer(templates, many=True).data)
+
+    def post(self, request):
+        serializer = CVTemplateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+class CVTemplateDetailAdminAPI(APIView):
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, pk):
+        CVTemplate.objects.get(pk=pk).delete()
+        return Response(status=204)
+
+class CVTemplatePublicAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        templates = CVTemplate.objects.filter(is_active=True)
+        return Response(CVTemplateSerializer(templates, many=True).data)
