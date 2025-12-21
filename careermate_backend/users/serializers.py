@@ -1,5 +1,11 @@
 from rest_framework import serializers
+
+from .models import User
+from .models import CVAnalysis
+from .models import Post, CVTemplate
+
 from .models import User, Profile, CVAnalysis
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -35,6 +41,20 @@ class CVAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = CVAnalysis
         fields = '__all__'
+
+        read_only_fields = ['user', 'extracted_text', 'skills_found', 'score', 'created_at']
+
+class PostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = "__all__"
+
+
+class CVTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CVTemplate
+        fields = "__all__"
+
         read_only_fields = [
             'user',
             'extracted_text',
@@ -42,3 +62,4 @@ class CVAnalysisSerializer(serializers.ModelSerializer):
             'score',
             'created_at'
         ]
+
