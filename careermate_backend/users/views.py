@@ -15,6 +15,8 @@ from .serializers import CVAnalysisSerializer
 from rest_framework.permissions import IsAdminUser
 from .models import Post, CVTemplate
 from .serializers import PostSerializer, CVTemplateSerializer
+from django.utils.timezone import now
+
 
 
 
@@ -206,6 +208,35 @@ class CVTemplatePublicAPI(APIView):
         templates = CVTemplate.objects.filter(is_active=True)
         return Response(CVTemplateSerializer(templates, many=True).data)
 
+
+class SystemStatusAPI(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        data = {
+            "total_users": User.objects.count(),
+            "total_posts": Post.objects.count(),
+            "total_cv_templates": CVTemplate.objects.count(),
+            "total_cv_uploaded": CVAnalysis.objects.count(),
+            "server_time": now()
+        }
+        return Response(data)
+
+
+class ReportSummaryAPI(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        today = now().date()
+
+        data = {
+            "new_users_today": User.objects.filter(date_joined__date=today).count(),
+            "cv_uploaded_today": CVAnalysis.objects.filter(created_at__date=today).count(),
+            "posts_published": Post.objects.filter(created_at__date=today).count(),
+        }
+        return Response(data)
+
         serializer = CVAnalysisSerializer(cv)
         return Response(serializer.data, status=201)
+
 
