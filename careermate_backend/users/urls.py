@@ -10,6 +10,8 @@ from .views import (
     CVTemplateAdminAPI,
     CVTemplateDetailAdminAPI,
     CVTemplatePublicAPI,
+    SystemStatusAPI,
+    ReportSummaryAPI,
 )
 
 urlpatterns = [
@@ -25,4 +27,7 @@ urlpatterns = [
     path("admin/cv-templates/", CVTemplateAdminAPI.as_view()),
     path("admin/cv-templates/<int:pk>/", CVTemplateDetailAdminAPI.as_view()),
     path("cv-templates/", CVTemplatePublicAPI.as_view()),
+    ## status & summary
+    path("admin/system/status/", SystemStatusAPI.as_view()),
+    path("admin/report/summary/", ReportSummaryAPI.as_view()),   
 ]
