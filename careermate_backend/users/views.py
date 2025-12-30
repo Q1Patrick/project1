@@ -5,10 +5,10 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
+
 from rest_framework.permissions import IsAuthenticated
 from .models import CVAnalysis
 from .serializers import CVAnalysisSerializer
@@ -18,20 +18,29 @@ from .serializers import PostSerializer, CVTemplateSerializer
 from django.utils.timezone import now
 
 
-#User
+
+
+from .models import Profile, CVAnalysis
+from .serializers import (
+    UserSerializer,
+    ProfileSerializer,
+    CVAnalysisSerializer,
+)
+
+# ===================== USER =====================
 class UserListAPI(APIView):
     def get(self, request):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-## Register
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterAPI(APIView):
     def post(self, request):
-        data = request.data
-        username = data.get("username")
-        email = data.get("email")
-        password = data.get("password")
+        username = request.data.get("username")
+        email = request.data.get("email")
+        password = request.data.get("password")
 
         if not username or not password:
             return Response(
@@ -45,7 +54,7 @@ class RegisterAPI(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = User.objects.create_user(
+        User.objects.create_user(
             username=username,
             email=email,
             password=password
@@ -55,7 +64,8 @@ class RegisterAPI(APIView):
             {"message": "User registered successfully"},
             status=status.HTTP_201_CREATED
         )
-## Login
+
+
 class LoginAPI(APIView):
     permission_classes = [AllowAny]
 
@@ -77,8 +87,30 @@ class LoginAPI(APIView):
             return Response({"error": "User not found"}, status=404)
 
 
+# ===================== PROFILE =====================
+class ProfileAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def post(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)
+
+
+# ===================== CV ANALYSIS =====================
 class CVUploadAnalyzeAPI(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         if 'cv_file' not in request.FILES:
@@ -89,20 +121,10 @@ class CVUploadAnalyzeAPI(APIView):
 
         cv_file = request.FILES['cv_file']
 
-        # đọc PDF
         reader = PyPDF2.PdfReader(cv_file)
         text = ""
         for page in reader.pages:
             text += page.extract_text() or ""
-
-        # demo phân tích
-        analysis_result = {
-            "skills": ["Python", "Django"],
-            "summary": "Demo CV analysis"
-        }
-
-        
-        user = request.user
 
         cv = CVAnalysis.objects.create(
             user=request.user,
@@ -111,6 +133,14 @@ class CVUploadAnalyzeAPI(APIView):
             skills_found="Python, Django",
             score=20
         )
+
+        # ✅ KHAI BÁO analysis_result
+        analysis_result = {
+            "cv_id": cv.id,
+            "skills": cv.skills_found,
+            "score": cv.score,
+            "extracted_text_preview": text[:300]  # tránh trả quá dài
+        }
 
         return Response(
             {
@@ -185,6 +215,7 @@ class CVTemplatePublicAPI(APIView):
         templates = CVTemplate.objects.filter(is_active=True)
         return Response(CVTemplateSerializer(templates, many=True).data)
 
+
 class SystemStatusAPI(APIView):
     permission_classes = [IsAdminUser]
 
@@ -211,3 +242,8 @@ class ReportSummaryAPI(APIView):
             "posts_published": Post.objects.filter(created_at__date=today).count(),
         }
         return Response(data)
+
+        serializer = CVAnalysisSerializer(cv)
+        return Response(serializer.data, status=201)
+
+
