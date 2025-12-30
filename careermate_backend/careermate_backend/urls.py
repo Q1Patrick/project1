@@ -18,8 +18,14 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/users/', include('users.urls')),
+
+    path("admin/", admin.site.urls),
+
+    # FRONTEND (HTML)
+    path("", include("project1.urls")),
+
+    # BACKEND API
+    path("api/users/", include("users.urls")),
 ]
 
 
