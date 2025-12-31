@@ -133,12 +133,14 @@ class CVUploadAnalyzeAPI(APIView):
             skills_found="Python, Django",
             score=20
         )
-
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        summary = " ".join(lines[:5])
         # ✅ KHAI BÁO analysis_result
         analysis_result = {
             "cv_id": cv.id,
             "skills": cv.skills_found,
             "score": cv.score,
+            "summary": summary,
             "extracted_text_preview": text[:300]  # tránh trả quá dài
         }
 
