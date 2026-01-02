@@ -2,6 +2,14 @@
 CAREERMATE_ARCHIVE/
 _backup_*/
 project1_BACKUP_BEFORE_DELETE/
-# uploads
+
+# uploads / db
 media/
 *.sqlite3
+
+# python
+__pycache__/
+*.pyc
+
+# env
+.env
