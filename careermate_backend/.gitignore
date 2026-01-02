@@ -1,3 +1,7 @@
-
-# Local uploads
+# Local backups
+CAREERMATE_ARCHIVE/
+_backup_*/
+project1_BACKUP_BEFORE_DELETE/
+# uploads
 media/
+*.sqlite3
