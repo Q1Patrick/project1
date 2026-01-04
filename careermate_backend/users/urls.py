@@ -17,8 +17,10 @@ from .views import (
 
 
     ProfileAPI,
+    QuizSubmitAPI,
     CVUploadAnalyzeAPI
 
+    
 
 )
 
@@ -40,7 +42,10 @@ urlpatterns = [
 
     ## status & summary
     path("admin/system/status/", SystemStatusAPI.as_view()),
-    path("admin/report/summary/", ReportSummaryAPI.as_view()),   
+    path("admin/report/summary/", ReportSummaryAPI.as_view()), 
+
+    path("quiz/submit/", QuizSubmitAPI.as_view()),
+  
 ]
 
 

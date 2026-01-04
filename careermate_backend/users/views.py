@@ -1,4 +1,5 @@
 import PyPDF2
+import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -135,12 +136,28 @@ class CVUploadAnalyzeAPI(APIView):
         )
         lines = [line.strip() for line in text.splitlines() if line.strip()]
         summary = " ".join(lines[:5])
+
+        coach_message = (
+            "Dựa trên CV dưới đây, hãy: "
+            "1) Tóm tắt 3-5 gạch đầu dòng; "
+            "2) Gợi ý 3 nghề phù hợp; "
+            "3) Gợi ý 5 kỹ năng nên bổ sung."
+        )
+        coach_profile = {
+            "username": request.user.username,
+            "cv_id": cv.id,
+            "cv_summary": summary,
+            "extracted_text_preview": text[:1200],  # gửi preview thôi để nhẹ
+        }
+        coach_reply = call_coach_chat(coach_message, coach_profile)
+
         # ✅ KHAI BÁO analysis_result
         analysis_result = {
             "cv_id": cv.id,
             "skills": cv.skills_found,
             "score": cv.score,
             "summary": summary,
+            "coach_reply": coach_reply, #ket hop chatbot
             "extracted_text_preview": text[:300]  # tránh trả quá dài
         }
 
@@ -248,4 +265,44 @@ class ReportSummaryAPI(APIView):
         serializer = CVAnalysisSerializer(cv)
         return Response(serializer.data, status=201)
 
+FLASK_BASE_URL = "http://127.0.0.1:5000"
+def call_coach_chat(message: str, profile: dict) -> str:
+    """
+    Call Flask Career Coach service to get a coaching reply.
+    If Flask is down, return a readable fallback string.
+    """
+    try:
+        r = requests.post(
+            f"{FLASK_BASE_URL}/chat",
+            json={"message": message, "profile": profile},
+            timeout=15,
+        )
+        r.raise_for_status()
+        return r.json().get("reply", "")
+    except Exception as e:
+        return f"[coach_service unavailable] {str(e)}"
 
+FLASK_QUIZ_URL = "http://127.0.0.1:5000"
+
+def call_quiz_service(answers: list) -> dict:
+    r = requests.post(
+        f"{FLASK_QUIZ_URL}/quiz/submit",
+        json={"answers": answers},
+        timeout=15
+    )
+    r.raise_for_status()
+    return r.json()
+
+class QuizSubmitAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        answers = request.data.get("answers")
+        if not answers:
+            return Response({"error": "answers is required"}, status=400)
+
+        try:
+            result = call_quiz_service(answers)
+            return Response({"message": "Quiz submitted", "result": result}, status=200)
+        except requests.RequestException as e:
+            return Response({"error": f"Quiz service error: {str(e)}"}, status=502)
