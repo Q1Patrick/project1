@@ -22,7 +22,7 @@ jobs:
       run: pip install -r requirements.txt
     
     - name: Run Tests
-      run: pytest test_app.py -v --cov=app --cov-report=xml
+      run: pytest test_app.py -v --cov=app --cov-report=xml --cov-report=term
     
     - name: Upload Coverage
       uses: codecov/codecov-action@v3
