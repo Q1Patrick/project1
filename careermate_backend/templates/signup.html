@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYS - Create Your Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .mys-navy { background-color: #3D4A7E; }
+        .mys-red { background-color: #C04B59; }
+        .text-mys-navy { color: #3D4A7E; }
+    </style>
+</head>
+<body class="bg-white font-sans text-gray-800">
+
+    <header class="bg-white border-b py-4 px-10 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl font-bold text-mys-navy italic">MYS</span>
+            <span class="text-[10px] text-gray-500 block uppercase leading-tight">make your selection</span>
+        </div>
+        <nav class="hidden md:flex space-x-6 text-sm font-bold text-gray-600 uppercase items-center">
+            <a href="/" class="hover:text-red-500">Home</a>
+            <a href="#" class="mys-red text-white px-3 py-1 rounded">Upload CV</a>
+            <a href="#" class="hover:text-red-500">Career Roadmap</a>
+            <a href="#" class="hover:text-red-500">Get a Quiz</a>
+            <a href="#" class="text-yellow-600">👑 Premium</a>
+            <a href="{% url 'login' %}" class="border-l pl-4 hover:text-red-500">Sign In</a>
+        </nav>
+    </header>
+
+    <div class="mys-navy py-12 text-center text-white">
+        <h1 class="text-5xl font-bold tracking-widest uppercase italic">WELCOME!</h1>
+    </div>
+
+    <main class="max-w-4xl mx-auto -mt-10 bg-white p-10 shadow-2xl rounded-lg mb-20 relative z-10">
+        <h2 class="text-3xl font-light text-center mb-10 tracking-[0.2em] uppercase">Create Your Account</h2>
+
+        <div class="flex justify-center space-x-6 mb-10">
+            <button class="border p-2 rounded w-20 flex justify-center hover:bg-gray-50 shadow-sm transition">
+                <img src="https://www.svgrepo.com/show/355037/google.svg" class="h-6" alt="Google">
+            </button>
+            <button class="border p-2 rounded w-20 flex justify-center hover:bg-gray-50 shadow-sm transition">
+                <img src="https://www.svgrepo.com/show/448204/apple.svg" class="h-6" alt="Apple">
+            </button>
+            <button class="border p-2 rounded w-20 flex justify-center hover:bg-gray-50 shadow-sm transition">
+                <img src="https://www.svgrepo.com/show/448243/microsoft.svg" class="h-6" alt="Microsoft">
+            </button>
+        </div>
+
+        <div class="relative flex py-5 items-center mb-8">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase tracking-widest italic">Or sign up with your email</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <form method="POST" action="" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="md:col-span-2 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm mb-4">
+                <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Please fix the following errors:</p>
+                <ul class="list-disc list-inside ml-4 mt-1">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="relative">
+                <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-user mr-2 text-xs"></i>First Name</label>
+                <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" class="w-full p-2 bg-gray-50 border-b-2 focus:outline-none focus:border-red-400" required>
+                <span class="absolute top-0 right-0 text-red-500 font-bold">*</span>
+            </div>
+
+            <div class="relative">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
+                <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" class="w-full p-2 bg-gray-50 border-b-2 focus:outline-none focus:border-red-400" required>
+                <span class="absolute top-0 right-0 text-red-500 font-bold">*</span>
+            </div>
+
+            <div class="relative">
+                <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-regular fa-envelope mr-2 text-xs"></i>Your Email</label>
+                <input type="email" name="email" value="{{ form.email.value|default:'' }}" class="w-full p-2 bg-gray-50 border-b-2 focus:outline-none focus:border-red-400" placeholder="abc@gmail.com" required>
+                <span class="absolute top-0 right-0 text-red-500 font-bold">*</span>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Your Phone</label>
+                <input type="tel" name="phone_number" value="{{ form.phone_number.value|default:'' }}" class="w-full p-2 bg-gray-50 border-b-2 focus:outline-none focus:border-red-400">
+            </div>
+
+            <div class="relative">
+                <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-lock mr-2 text-xs"></i>Password</label>
+                <input type="password" name="password" class="w-full p-2 bg-gray-50 border-b-2 focus:outline-none focus:border-red-400" required>
+                <span class="absolute top-0 right-0 text-red-500 font-bold">*</span>
+                <ul class="text-[10px] text-blue-400 mt-2 space-y-1 italic">
+                    <li>✓ Password Strength: Weak</li>
+                    <li>✓ Cannot contain your name or email</li>
+                    <li>✓ At least 8 characters</li>
+                    <li>✓ Contains a number or symbol</li>
+                </ul>
+            </div>
+
+            <div class="relative">
+                <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-lock mr-2 text-xs"></i>Confirm Password</label>
+                <input type="password" name="confirm_password" class="w-full p-2 bg-gray-50 border-b-2 focus:outline-none focus:border-red-400" required>
+                <span class="absolute top-0 right-0 text-red-500 font-bold">*</span>
+                <p class="text-[10px] text-red-500 mt-2 italic font-bold">* You need to fill</p>
+            </div>
+
+            <div class="md:col-span-2 mt-4 space-y-3">
+                <label class="flex items-start text-[11px] text-blue-900 cursor-pointer">
+                    <input type="checkbox" class="mt-0.5 mr-2">
+                    <span>I agree to <a href="#" class="underline">Terms of Service</a> and <a href="#" class="underline">Privacy policy</a></span>
+                </label>
+                <label class="flex items-start text-[11px] text-blue-900 cursor-pointer">
+                    <input type="checkbox" class="mt-0.5 mr-2">
+                    <span>Email me tailored resume advice & updates from MYS</span>
+                </label>
+            </div>
+
+            <div class="md:col-span-2 text-center mt-8">
+                <button type="submit" class="mys-red text-white px-10 py-3 rounded shadow-lg font-bold uppercase tracking-widest hover:scale-105 transition">
+                      Create an account
+                </button>
+                <p class="mt-6 text-sm">
+                    Already have an account? <a href="{% url 'login' %}" class="text-mys-navy font-bold italic tracking-wide">SIGN IN</a>
+                </p>
+            </div>
+        </form>
+    </main>
+
+    <footer class="bg-white border-t py-16 px-10">
+        </footer>
+        
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Python & Django
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Môi trường ảo (Virtual Env)
+venv/
+.venv/
+env/
+
+# Biến môi trường (BÍ MẬT - KHÔNG ĐƯỢC XÓA DÒNG DƯỚI)
+.env

@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYS - Success</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .mys-navy { background-color: #3D4A7E; }
+        .mys-lavender { background-color: #DDE1F3; }
+        .text-mys-navy { color: #3D4A7E; }
+    </style>
+</head>
+<body class="bg-white font-sans text-gray-800 flex flex-col min-h-screen">
+
+    <header class="bg-white border-b py-4 px-10 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl font-bold text-mys-navy italic">MYS</span>
+            <span class="text-[10px] text-gray-500 block uppercase leading-tight">make your selection</span>
+        </div>
+        <nav class="hidden md:flex space-x-6 text-sm font-bold text-gray-600 uppercase items-center">
+            <a href="/" class="hover:text-red-500">Home</a>
+            <a href="#" class="border px-3 py-1 rounded text-mys-navy">Upload CV</a>
+            <a href="#" class="hover:text-red-500">Career Roadmap</a>
+            <a href="#" class="hover:text-red-500">Get a Quiz</a>
+            <a href="#" class="text-yellow-600">👑 Premium</a>
+            <div class="flex items-center space-x-4 border-l pl-4">
+                <i class="fa-solid fa-bell text-yellow-400 text-lg cursor-pointer"></i>
+                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-user text-gray-500 text-sm"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow mys-lavender flex items-center justify-center p-6 py-20">
+        
+        <div class="bg-white rounded-[3rem] shadow-sm p-16 max-w-4xl w-full text-center min-h-[500px] flex flex-col justify-center items-center">
+            
+            <div class="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center mb-10 border-[10px] border-blue-50 relative">
+                 <div class="absolute inset-0 rounded-full border-4 border-dashed border-blue-500 animate-spin-slow opacity-20"></div>
+                 <i class="fa-solid fa-check text-5xl text-blue-600"></i>
+            </div>
+
+            <h1 class="text-4xl font-bold text-gray-700 mb-4 tracking-tight">Account created successfully!</h1>
+            <p class="text-gray-400 text-lg mb-12">Welcome aboard! Start your success journey with MYS!</p>
+
+            <a href="/" class="mys-navy text-white px-12 py-3 rounded-lg font-bold uppercase tracking-widest hover:opacity-90 transition shadow-lg">
+                Let's Start!
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t py-12 px-10">
+        </footer>
+
+</body>
+</html>
