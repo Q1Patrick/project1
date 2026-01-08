@@ -1,8 +1,8 @@
-# CM5 CI/CD Pipeline
+# CareerMate API
 
-CareerMate API - AI-Powered Job Companion backend service with automated CI/CD pipeline.
+AI-Powered Job Companion backend service.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install dependencies
@@ -46,3 +46,4 @@ cm5-ci-cd/
 ├── requirements.txt     # Dependencies
 ├── Dockerfile          # Container config
 └── .github/workflows/ # CI/CD pipeline
+```

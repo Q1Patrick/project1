@@ -1,4 +1,4 @@
-name: CareerMate CI/CD
+name: CM5 CI/CD Pipeline
 
 on:
   push:
@@ -47,8 +47,8 @@ jobs:
         context: .
         push: false
         tags: |
-          nhutnm/careermate:latest
-          nhutnm/careermate:${{ github.sha }}
+          cm5-careermate:latest
+          cm5-careermate:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         outputs: type=docker,dest=/tmp/image.tar
