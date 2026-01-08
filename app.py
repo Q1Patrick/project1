@@ -1,27 +1,32 @@
-from flask import Flask, jsonify
-import os
-import time
+from flask import Flask, request, jsonify
+from quiz_analysis import analyze_quiz
+from career_recommendation import recommend_career
 
 app = Flask(__name__)
 
-@app.route('/health', methods=['GET'])
+@app.route("/quiz/submit", methods=["POST"])
+def submit_quiz():
+    data = request.json or {}
+    answers = data.get("answers")
+
+    try:
+        quiz_result = analyze_quiz(answers)
+        careers = recommend_career(quiz_result)
+
+        return jsonify({
+            "quiz_result": quiz_result,
+            "recommended_careers": careers
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/health", methods=["GET"])
 def health():
-    """Health check endpoint."""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': time.time(),
-        'service': 'CareerMate API',
-        'version': '1.0.0'
-    })
+    return jsonify({"status": "CM-4.3 OK"})
 
-@app.route('/', methods=['GET'])
-def index():
-    """Root endpoint."""
-    return jsonify({
-        'message': 'CareerMate API - Your AI-Powered Job Companion',
-        'version': '1.0.0'
-    })
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
