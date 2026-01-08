@@ -1,6 +1,6 @@
-# CareerMate API
+# CM5 CI/CD Pipeline
 
-AI-Powered Job Companion backend service.
+CareerMate API - AI-Powered Job Companion backend service with automated CI/CD pipeline.
 
 ## 🚀 Quick Start
 
@@ -24,25 +24,25 @@ pytest test_app.py -v
 
 ```bash
 # Build image
-docker build -t careermate .
+docker build -t cm5-careermate .
 
 # Run container
-docker run -p 5000:5000 careermate
+docker run -p 5000:5000 cm5-careermate
 ```
 
-## 🔄 CI/CD Pipeline
+## 🔄 CM5 CI/CD Pipeline
 
 - **Test Job**: Runs unit tests with coverage
 - **Build Job**: Creates Docker image artifact
 - **Triggers**: Push to main/develop branches
+- **Artifacts**: Docker image download available
 
 ## 📊 Project Structure
 
 ```
-careermate/
+cm5-ci-cd/
 ├── app.py              # Flask API
 ├── test_app.py          # Unit tests
 ├── requirements.txt     # Dependencies
 ├── Dockerfile          # Container config
 └── .github/workflows/ # CI/CD pipeline
-```
