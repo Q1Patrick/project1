@@ -1,29 +1,27 @@
 from flask import Flask, request, jsonify
-from coach_service_mock import generate_response, interview_feedback
+import os
+from cvparser import extract_text
+from analyzer import analyze_cv
 
 app = Flask(__name__)
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.json or {}
-    message = data.get("message", "")
-    profile = data.get("profile", {})
+@app.route("/analyze-cv", methods=["POST"])
+def analyze():
+    file = request.files.get("cv")
+    job_desc = request.form.get("job_description", "")
 
-    if not message:
-        return jsonify({"error": "Message is required"}), 400
+    if not file:
+        return jsonify({"error": "No CV uploaded"}), 400
 
-    reply = generate_response(message, profile)
-    return jsonify({"reply": reply})
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
 
-@app.route("/mock-interview/feedback", methods=["POST"])
-def feedback():
-    data = request.json or {}
-    answer = data.get("answer", "")
-    return jsonify(interview_feedback(answer))
+    cv_text = extract_text(file_path)
+    result = analyze_cv(cv_text, job_desc)
 
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "success", "analysis": result})
 
 if __name__ == "__main__":
     app.run(debug=True)
