@@ -1,27 +1,29 @@
-from flask import Flask, jsonify
-import os
-import time
+from flask import Flask, request, jsonify
+from coach_service_mock import generate_response, interview_feedback
 
 app = Flask(__name__)
 
-@app.route('/health', methods=['GET'])
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json or {}
+    message = data.get("message", "")
+    profile = data.get("profile", {})
+
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+
+    reply = generate_response(message, profile)
+    return jsonify({"reply": reply})
+
+@app.route("/mock-interview/feedback", methods=["POST"])
+def feedback():
+    data = request.json or {}
+    answer = data.get("answer", "")
+    return jsonify(interview_feedback(answer))
+
+@app.route("/health", methods=["GET"])
 def health():
-    """Health check endpoint."""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': time.time(),
-        'service': 'CareerMate API',
-        'version': '1.0.0'
-    })
+    return jsonify({"status": "ok"})
 
-@app.route('/', methods=['GET'])
-def index():
-    """Root endpoint."""
-    return jsonify({
-        'message': 'CareerMate API - Your AI-Powered Job Companion',
-        'version': '1.0.0'
-    })
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+if __name__ == "__main__":
+    app.run(debug=True)
