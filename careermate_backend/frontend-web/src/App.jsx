@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
@@ -6,7 +6,8 @@ import Dashboard from './pages/Dashboard'; // Candidate Dashboard
 import AdminDashboard from './pages/AdminDashboard';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import CVAnalyzer from './pages/CVAnalyzer';
-import ChatBot from './components/ChatBot';
+import CareerRoadmap from './pages/CareerRoadmap';
+import PostJob from './pages/PostJob';
 // Component bảo vệ Route: Chỉ cho phép role cụ thể truy cập
 const PrivateRoute = ({ children, allowedRoles }) => {
     const storedUser = localStorage.getItem('userInfo');
@@ -34,9 +35,7 @@ function App() {
       <Route path="/signup" element={<Signup />} />
 
       {/* 1. Candidate Route */}
-      <Route 
-        path="/dashboard" 
-        element={
+      <Route path="/dashboard" element={
             <PrivateRoute allowedRoles={['candidate']}>
                 <Dashboard />
             </PrivateRoute>
@@ -45,18 +44,24 @@ function App() {
 
       {/* 2. Recruiter Route */}
       <Route 
-        path="/recruiter" 
-        element={
+        path="/recruiter" element={
             <PrivateRoute allowedRoles={['recruiter']}>
                 <RecruiterDashboard />
             </PrivateRoute>
         } 
       />
 
+      {/* Post Job Route */}
+      <Route path="/recruiter/post-job" element={
+            <PrivateRoute allowedRoles={['recruiter']}>
+                <PostJob />
+            </PrivateRoute>
+        } 
+      />
+
       {/* 3. Admin Route */}
       <Route 
-        path="/admin" 
-        element={
+        path="/admin" element={
             <PrivateRoute allowedRoles={['admin']}>
                 <AdminDashboard />
             </PrivateRoute>
@@ -67,10 +72,13 @@ function App() {
       <Route 
         path="/cv-analyzer" 
           element={<CVAnalyzer />} /> 
+
+      <Route 
+        path="/career-roadmap" 
+          element={<CareerRoadmap />} />
     </Routes> 
-
-
-        <ChatBot />
+      
+      
     </div>
   );
 }

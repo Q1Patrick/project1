@@ -36,6 +36,7 @@ urlpatterns = [
     path('users/api/login/', views.login_api, name='login_api'),
     path('jobs/', include('jobs.urls')),
     path('ai/', include('ai_agent.urls')),
+    path('jobs/', include('jobs.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

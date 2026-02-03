@@ -69,8 +69,7 @@ export default function Dashboard() {
                     <Link to="/jobs" className="text-[#C04B59]">Find Jobs</Link>
                     <Link to="/cv-analyzer" className="text-[#C04B59] flex items-center">
                     <i className="fa-solid fa-wand-magic-sparkles mr-2"></i> AI Analyzer
-    </Link>
-                    <Link to="/cv-builder" className="hover:text-[#C04B59]">CV Builder</Link>
+                    </Link>
                     <Link to="/career-coach" className="hover:text-[#C04B59] flex items-center">
                         <i className="fa-solid fa-robot mr-1"></i> AI Coach
                     </Link>

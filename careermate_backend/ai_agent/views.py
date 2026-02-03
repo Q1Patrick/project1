@@ -26,7 +26,7 @@ class AnalyzeCVView(APIView):
         # 4. Lưu vào Database (Quan trọng cho Giai đoạn 2 - Chatbot)
         CVAnalysis.objects.create(
             user=request.user,
-            cv_text=text,
+            extracted_text=text,
             analysis_result=ai_result
         )
 
@@ -49,7 +49,7 @@ class ChatCVView(APIView):
             if not latest_analysis:
                 return Response({"reply": "Tôi chưa thấy CV của bạn. Hãy qua trang 'Phân tích CV' và upload trước nhé!"})
             
-            cv_context = latest_analysis.cv_text
+            cv_context = latest_analysis.extracted_text
             
         except Exception as e:
             return Response({"reply": "Lỗi hệ thống khi tìm CV."})

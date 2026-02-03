@@ -1,97 +1,116 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import Navbar from '../components/Navbar';
 export default function RecruiterDashboard() {
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('jobs'); 
+    // 1. Khai báo biến để lưu trữ dữ liệu từ Backend
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const user = JSON.parse(localStorage.getItem('userInfo')) || {};
 
-    // Mock Data
-    const myJobs = [
-        { id: 1, title: "Senior React Dev", posted: "2025-12-01", applications: 15, status: "Active" },
-        { id: 2, title: "Intern Python", posted: "2026-01-02", applications: 45, status: "Reviewing" },
-    ];
+    // 2. Gọi API ngay khi vào trang
+    useEffect(() => {
+        const fetchMyJobs = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await axios.get('http://127.0.0.1:8000/jobs/my-jobs/', {
+                    headers: {
+                        'Authorization': `Token ${token}`
+                    }
+                });
+                setJobs(response.data); // Lưu dữ liệu vào biến jobs
+            } catch (error) {
+                console.error("Lỗi tải danh sách việc làm:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const handleLogout = () => {
-        localStorage.clear();
-        navigate('/login');
-    };
+        fetchMyJobs();
+    }, []);
 
     return (
-        <div className="flex h-screen bg-gray-100 font-sans">
-            {/* SIDEBAR */}
-            <aside className="w-64 bg-gray-900 text-white flex flex-col">
-                <div className="p-6 text-2xl font-bold text-[#C04B59]">MYS <span className="text-xs text-white block font-normal">Recruiter Portal</span></div>
-                <nav className="flex-1 px-4 space-y-2">
-                    <button onClick={() => setActiveTab('jobs')} className={`w-full text-left py-3 px-4 rounded ${activeTab === 'jobs' ? 'bg-[#C04B59]' : 'hover:bg-gray-800'}`}>
-                        <i className="fa-solid fa-briefcase mr-3"></i> My Jobs
-                    </button>
-                    <button onClick={() => setActiveTab('candidates')} className="w-full text-left py-3 px-4 rounded hover:bg-gray-800">
-                        <i className="fa-solid fa-users mr-3"></i> Candidates Pipeline
-                    </button>
-                    <button className="w-full text-left py-3 px-4 rounded hover:bg-gray-800">
-                        <i className="fa-solid fa-building mr-3"></i> Company Profile
-                    </button>
-                </nav>
-                <div className="p-4 border-t border-gray-700">
-                    <button onClick={handleLogout} className="text-gray-400 hover:text-white"><i className="fa-solid fa-right-from-bracket mr-2"></i> Logout</button>
+        <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <div className="max-w-6xl mx-auto">
+                {/* --- PHẦN 1: HEADER & LỜI CHÀO --- */}
+                <div className="flex justify-between items-center mb-10">
+                    <div>
+                        <h1 className="text-3xl font-bold text-[#3D4A7E]">Bảng điều khiển Nhà tuyển dụng</h1>
+                        <p className="text-gray-500 mt-1">Xin chào, <span className="font-bold text-[#C04B59]">{user.last_name} {user.first_name}</span>!</p>
+                    </div>
                 </div>
-            </aside>
-
-            {/* MAIN CONTENT */}
-            <main className="flex-1 p-8 overflow-y-auto">
-                <header className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-                    <button className="bg-[#C04B59] text-white px-6 py-2 rounded shadow hover:bg-rose-700">
-                        <i className="fa-solid fa-plus mr-2"></i> Post New Job
-                    </button>
-                </header>
-
-                {/* STATS CARDS */}
-                <div className="grid grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded shadow-sm border-l-4 border-blue-500">
-                        <p className="text-gray-500">Active Jobs</p>
-                        <p className="text-2xl font-bold">12</p>
+                
+                {/* --- PHẦN 2: CÁC CARD CHỨC NĂNG (Code cũ của bạn + Số liệu thật) --- */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    {/* Card 1: Đăng tin */}
+                    <div className="bg-white p-6 shadow-md rounded-lg border-t-4 border-[#C04B59] hover:shadow-xl transition">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-xl text-gray-800">Đăng tin mới</h3>
+                            <i className="fa-solid fa-pen-to-square text-2xl text-[#C04B59] opacity-20"></i>
+                        </div>
+                        <p className="text-gray-600 mb-6 text-sm">Tạo tin tuyển dụng mới để tìm kiếm ứng viên.</p>
+                        <Link to="/recruiter/post-job" className="inline-block w-full text-center bg-[#3D4A7E] text-white py-2 rounded hover:bg-opacity-90 transition font-bold text-sm">
+                            + TẠO BÀI ĐĂNG
+                        </Link>
                     </div>
-                    <div className="bg-white p-6 rounded shadow-sm border-l-4 border-green-500">
-                        <p className="text-gray-500">Total Applications</p>
-                        <p className="text-2xl font-bold">145</p>
-                    </div>
-                    <div className="bg-white p-6 rounded shadow-sm border-l-4 border-yellow-500">
-                        <p className="text-gray-500">Interviews Scheduled</p>
-                        <p className="text-2xl font-bold">8</p>
+
+                    {/* Card 2: Thống kê (Đã cập nhật số liệu thật) */}
+                    <div className="bg-white p-6 shadow-md rounded-lg border-t-4 border-blue-500">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-xl text-gray-800">Tin đang hiển thị</h3>
+                            <i className="fa-solid fa-briefcase text-2xl text-blue-500 opacity-20"></i>
+                        </div>
+                        <p className="text-gray-600 mb-2 text-sm">Tổng số bài viết bạn đã đăng:</p>
+                        <p className="text-4xl font-bold text-[#3D4A7E]">{jobs.length}</p>
                     </div>
                 </div>
 
-                {/* JOBS TABLE */}
-                <div className="bg-white rounded shadow-sm overflow-hidden">
-                    <div className="p-4 border-b font-bold text-gray-700">Recent Job Postings</div>
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
-                            <tr>
-                                <th className="p-4">Job Title</th>
-                                <th className="p-4">Posted Date</th>
-                                <th className="p-4">Candidates</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                            {myJobs.map(job => (
-                                <tr key={job.id} className="border-b hover:bg-gray-50">
-                                    <td className="p-4 font-bold text-[#3D4A7E]">{job.title}</td>
-                                    <td className="p-4 text-gray-500">{job.posted}</td>
-                                    <td className="p-4"><span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-bold">{job.applications}</span></td>
-                                    <td className="p-4"><span className="text-green-600 font-bold">● {job.status}</span></td>
-                                    <td className="p-4">
-                                        <button className="text-blue-600 hover:underline mr-3">View</button>
-                                        <button className="text-red-600 hover:underline">Close</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                {/* --- PHẦN 3: BẢNG DANH SÁCH CÔNG VIỆC (Mới thêm vào) --- */}
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100">
+                        <h3 className="font-bold text-lg text-[#3D4A7E]">Danh sách tin tuyển dụng của bạn</h3>
+                    </div>
+
+                    {loading ? (
+                        <div className="p-10 text-center text-gray-500">Đang tải dữ liệu...</div>
+                    ) : jobs.length === 0 ? (
+                        <div className="p-10 text-center text-gray-500">
+                            Bạn chưa đăng tin nào. Hãy bấm nút tạo bài đăng ở trên nhé!
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 font-bold text-gray-600 text-sm">Tiêu đề</th>
+                                        <th className="px-6 py-3 font-bold text-gray-600 text-sm">Ngày đăng</th>
+                                        <th className="px-6 py-3 font-bold text-gray-600 text-sm">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {jobs.map((job) => (
+                                        <tr key={job.id} className="border-b last:border-0 hover:bg-gray-50">
+                                            <td className="px-6 py-4">
+                                                <div className="font-bold text-[#3D4A7E]">{job.title}</div>
+                                                <div className="text-xs text-gray-500">{job.location}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {new Date(job.created_at).toLocaleDateString('vi-VN')}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold">
+                                                    Active
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-            </main>
+            </div>
         </div>
     );
 }

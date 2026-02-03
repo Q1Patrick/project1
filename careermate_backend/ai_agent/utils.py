@@ -16,7 +16,6 @@ if not GOOGLE_API_KEY:
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-genai.configure(api_key=GOOGLE_API_KEY)
 
 def extract_text_from_pdf(pdf_file):
     """Hàm đọc chữ từ file PDF"""
@@ -34,8 +33,17 @@ def extract_text_from_pdf(pdf_file):
 def analyze_cv(cv_text):
     """Hàm gửi CV cho Gemini chấm điểm (Trả về JSON)"""
     
+    generation_config = {
+        "temperature": 0.3,          # 0.0 = Logic tuyệt đối (Kết quả giống nhau)
+        "top_p": 1,
+        "top_k": 1,
+        "max_output_tokens": 2048,
+    }
     # Chọn Model miễn phí: gemini-2.0-flash
-    model = genai.GenerativeModel('gemini-flash-latest')
+    model = genai.GenerativeModel(
+        model_name='gemini-flash-latest',
+        generation_config=generation_config
+    )
 
     prompt = f"""
     Bạn là chuyên gia tuyển dụng (HR). Hãy phân tích CV dưới đây.
@@ -75,7 +83,11 @@ def analyze_cv(cv_text):
 
 def chat_with_cv(cv_text, user_question):
     """Hàm chat với Gemini dựa trên ngữ cảnh CV"""
-    model = genai.GenerativeModel('gemini-flash-latest')
+    generation_config = {
+        "temperature": 0.7, 
+        "max_output_tokens": 1024,
+    }
+    model = genai.GenerativeModel('gemini-flash-latest', generation_config=generation_config)
     
     prompt = f"""
     Bạn là Career Coach. Dưới đây là CV của người dùng:

@@ -10,6 +10,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="flex h-screen bg-gray-200 font-sans">
+            <Navbar />
             {/* SIDEBAR ADMIN */}
             <aside className="w-64 bg-[#1a202c] text-white flex flex-col">
                 <div className="p-6 text-xl font-bold tracking-wider">MYS ADMIN</div>

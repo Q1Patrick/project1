@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 export default function Signup() {
+    const navigate = useNavigate();
     // 1. State lưu dữ liệu form
     const [formData, setFormData] = useState({
         email: '',
@@ -9,7 +10,8 @@ export default function Signup() {
         confirm_password: '',
         first_name: '',
         last_name: '',
-        phone_number: ''
+        phone_number: '',
+        role: 'candidate'
     });
 
     const [error, setError] = useState('');
@@ -24,58 +26,46 @@ export default function Signup() {
 
     // 3. Hàm xử lý Submit form
     const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+        e.preventDefault();
+        setError('');
 
-    // Kiểm tra pass
-    if (formData.password !== formData.confirm_password) {
-        setError("Mật khẩu xác nhận không khớp!");
-        return;
-    }
-
-    try {
-        // BƯỚC 1: GỌI API ĐĂNG KÝ
-        await axios.post('http://127.0.0.1:8000/users/api/signup/', {
-            email: formData.email,
-            password: formData.password,
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone_number: formData.phone_number
-        });
-
-        // BƯỚC 2: GỌI LUÔN API ĐĂNG NHẬP (AUTO LOGIN)
-        // Dùng chính email và password vừa nhập để xin Token ngay lập tức
-        const loginResponse = await axios.post('http://127.0.0.1:8000/users/api/login/', {
-            username: formData.email,
-            password: formData.password
-        });
-
-        // BƯỚC 3: LƯU TOKEN VÀO MÁY
-        const { token, user } = loginResponse.data;
-        localStorage.setItem('accessToken', token);
-        localStorage.setItem('userInfo', JSON.stringify(user));
-
-        alert("Đăng ký thành công! Đang chuyển vào Dashboard...");
-
-        // BƯỚC 4: CHUYỂN HƯỚNG (Lúc này đã có Token nên Dashboard sẽ mở cửa)
-        if (user.role === 'recruiter') {
-             navigate('/recruiter');
-        } else if (user.role === 'admin') {
-             navigate('/admin');
-        } else {
-             navigate('/dashboard');
+        // Kiểm tra pass
+        if (formData.password !== formData.confirm_password) {
+            setError("Mật khẩu xác nhận không khớp!");
+            return;
         }
+        console.log("Dữ liệu chuẩn bị gửi đi:", formData);
+        try {
+            // BƯỚC 1: CHỈ GỌI API ĐĂNG KÝ
+            await axios.post('http://127.0.0.1:8000/users/api/signup/', {
+                email: formData.email,
+                password: formData.password,
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                phone_number: formData.phone_number,
+                role: formData.role
+                // Không cần gửi username vì Backend đã tự xử lý rồi
+            });
 
-    } catch (err) {
-        console.error(err);
-        // Xử lý lỗi
-        if (err.response && err.response.data) {
-            setError(JSON.stringify(err.response.data));
-        } else {
-            setError("Có lỗi xảy ra, vui lòng thử lại.");
+            // BƯỚC 2: THÔNG BÁO VÀ CHUYỂN TRANG
+            // Không cố đăng nhập tự động nữa để tránh lỗi phát sinh
+            alert("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
+            navigate('/login'); // Chuyển ngay sang trang đăng nhập
+
+        } catch (err) {
+            console.error(err);
+            // Xử lý hiển thị lỗi
+            if (err.response && err.response.data) {
+                // Nếu Backend trả về object lỗi (ví dụ {error: "Email trùng"})
+                const errorData = err.response.data;
+                // Lấy ra thông báo lỗi đầu tiên tìm thấy
+                const errorMessage = errorData.error || errorData.detail || JSON.stringify(errorData);
+                setError(errorMessage);
+            } else {
+                setError("Có lỗi xảy ra, vui lòng thử lại.");
+            }
         }
-    }
-};
+    };
 
     return (
         <div className="font-sans text-gray-800 bg-white min-h-screen flex flex-col">
@@ -91,7 +81,7 @@ export default function Signup() {
                     </div>
                 </div>
                 <nav className="hidden md:flex space-x-8 text-[13px] font-bold text-gray-600 uppercase items-center tracking-wide">
-                    <a href="#" className="hover:text-[#C04B59] transition">Home</a>
+                    <a href="/" className="hover:text-[#C04B59] transition">Home</a>
                     <a href="#" className="hover:text-[#C04B59] transition">Upload CV</a>
                     <a href="#" className="hover:text-[#C04B59] transition">Career Roadmap</a>
                     <a href="#" className="hover:text-[#C04B59] transition">Get a Quiz</a>
@@ -162,7 +152,7 @@ export default function Signup() {
                             className="w-full p-2 bg-gray-50 border-b-2 border-gray-200 focus:outline-none focus:border-[#C04B59] transition" />
                         <span className="absolute top-0 right-0 text-[#C04B59] font-bold text-lg">*</span>
                     </div>
-
+                    
                     <div className="relative">
                         <label className="block text-sm font-bold text-gray-700 mb-2">Your Phone</label>
                         <input type="tel" name="phone_number" onChange={handleChange}
@@ -178,6 +168,34 @@ export default function Signup() {
                             <li>✓ Password Strength: Weak</li>
                             <li>✓ Cannot contain your name or email address</li>
                         </ul>
+<div className="md:col-span-2 mb-4">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">I am a:</label>
+                        <div className="flex space-x-6">
+                            <label className="flex items-center cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="role" 
+                                    value="candidate"
+                                    checked={formData.role === 'candidate'}
+                                    onChange={handleChange}
+                                    className="mr-2 accent-[#C04B59]"
+                                />
+                                <span className="font-medium">Candidate (Job Seeker)</span>
+                            </label>
+                            <label className="flex items-center cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="role" 
+                                    value="recruiter"
+                                    checked={formData.role === 'recruiter'}
+                                    onChange={handleChange}
+                                    className="mr-2 accent-[#C04B59]"
+                                />
+                                <span className="font-medium">Recruiter (Employer)</span>
+                            </label>
+                        </div>
+                    </div>
+
                     </div>
 
                     <div className="relative">
@@ -189,6 +207,7 @@ export default function Signup() {
                         <div className="mt-4 text-right">
                              <span className="text-xs text-[#C04B59] font-bold">* : You need to fill</span>
                         </div>
+                        
                     </div>
 
                     <div className="md:col-span-2 mt-2 space-y-3">
@@ -201,7 +220,7 @@ export default function Signup() {
                             <span>Email me tailored resume advice & updates from MYS</span>
                         </label>
                     </div>
-
+                    
                     <div className="md:col-span-2 text-center mt-8">
                         <button type="submit" className="bg-[#C04B59] text-white px-16 py-3 rounded shadow-md font-bold uppercase tracking-widest hover:bg-opacity-90 transition transform hover:scale-105">
                             CREATE AN ACCOUNT

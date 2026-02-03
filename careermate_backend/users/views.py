@@ -28,7 +28,7 @@ from django.contrib.auth import login
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from rest_framework.authtoken.models import Token
-
+from django.db import IntegrityError
 from .models import Profile, CVAnalysis, Post, CVTemplate
 from .serializers import (
     UserSerializer,
@@ -387,18 +387,28 @@ def change_password(request):
 
 @api_view(['POST'])
 def signup_api(request):
-    # 1. Nhận dữ liệu JSON từ React (request.data)
-    serializer = SignupSerializer(data=request.data)
 
-    # 2. Kiểm tra dữ liệu (Validation)
-    if serializer.is_valid():
-        # 3. Lưu vào database (Pass qua hàm create ở serializer)
-        serializer.save()
-        return Response({
-            "message": "Tạo tài khoản thành công!",
-            "data": serializer.data
-            }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    data = request.data.copy()
+
+    if 'email' in data:
+        data['username'] = data['email']
+
+    try:
+        # 1. Kiểm tra dữ liệu đầu vào
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Đăng ký thành công!"}, status=201)
+        
+        # 2. Nếu dữ liệu sai (thiếu pass, sai định dạng email...)
+        return Response(serializer.errors, status=400)
+
+    except IntegrityError:
+        # 3. NẾU LỖI TRÙNG TÊN/EMAIL -> Báo lỗi thân thiện thay vì sập server
+        return Response({"error": "Tài khoản hoặc Email này đã tồn tại!"}, status=400)
+    except Exception as e:
+        # 4. Các lỗi khác
+        return Response({"error": str(e)}, status=500)
 
 @api_view(['POST'])
 def login_api(request):
@@ -419,17 +429,12 @@ def login_api(request):
         # Nếu đúng -> Tạo (hoặc lấy) Token cho user đó
         token, _ = Token.objects.get_or_create(user=user)
         
+        serializer = UserSerializer(user)
+
         return Response({
             "message": "Đăng nhập thành công",
             "token": token.key, # <--- Đây là chìa khóa quan trọng
-            "user": {
-                "id": user.id,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-                "role": user.role,
-                # "avatar": user.avatar.url if user.avatar else None (Bỏ comment nếu có avatar)
-            }
+            "user": serializer.data
         }, status=200)
     else:
         return Response({"error": "Email hoặc mật khẩu không đúng!"}, status=400)

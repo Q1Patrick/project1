@@ -30,13 +30,22 @@ export default function Login() {
 
             alert("Xin chào, " + user.last_name + " " + user.first_name);
 
+            console.log("Check User Info:", user); 
+            console.log("Check User Role:", user.role);
             // 3. Chuyển hướng vào Dashboard
-            navigate('/dashboard'); 
+            if (user.role === 'recruiter') {
+                navigate('/recruiter'); // Nhà tuyển dụng -> Vào Dashboard tuyển dụng
+            } else if (user.role === 'admin' || user.is_superuser) {
+                navigate('/admin');     // Admin -> Vào trang quản trị
+            } else {
+                navigate('/'); // Còn lại (Candidate) -> Vào trang tìm việc
+            }
 
         } catch (err) {
             console.error(err);
             if (err.response && err.response.data) {
-                setError(err.response.data.error || "Đăng nhập thất bại");
+                const errorData = err.response.data;
+                setError(errorData.detail || errorData.error || "Tên đăng nhập hoặc mật khẩu không đúng!");
             } else {
                 setError("Không thể kết nối đến server");
             }
