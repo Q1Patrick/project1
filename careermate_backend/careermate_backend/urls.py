@@ -19,26 +19,22 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from users import views
-
+from django.views.generic import RedirectView
 urlpatterns = [
-    path('', include('users.urls')),
-    path('', views.home_view, name='home'),
-    path('success/', views.success_view, name='success'),
-    path('login/', views.login_view, name='login'),
-    path('signup/', views.signup_view, name='signup'),
-    path('logout/', views.logout_view, name='logout'),
-    path('home_success/', views.home_success_view, name='home_success'),
+    path('', RedirectView.as_view(url='/admin/', permanent=False)),
     path('admin/', admin.site.urls),
-    path('logout/', views.logout_view, name='logout'),
-    path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('profile/password/', views.change_password, name='change_password'),
-    path('users/api/signup/', views.signup_api, name='signup_api'),
-    path('users/api/login/', views.login_api, name='login_api'),
+    #path('profile/edit/', views.edit_profile, name='edit_profile'),
+    #path('profile/password/', views.change_password, name='change_password'),
+    path('users/', include('users.urls')),  # ✅ INCLUDE TOÀN BỘ USERS URLs
     path('jobs/', include('jobs.urls')),
     path('ai/', include('ai_agent.urls')),
-    path('jobs/', include('jobs.urls')),
+    path('premium/', include('premium.urls')), 
+    path('billing/', include('billing.urls')),
+    path('editor/', include('cv_editor.urls')),
+    path('api/assessment/', include('assessments.urls')),
 ]
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 

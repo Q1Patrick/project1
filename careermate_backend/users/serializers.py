@@ -11,7 +11,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'avatar', 'password', 'role']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'avatar', 'password', 'role', 'cv_file']
         extra_kwargs = {
             'password': {'write_only': True},
             # --- DÒNG QUAN TRỌNG NHẤT: ---
@@ -73,7 +73,6 @@ class CVAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = CVAnalysis
         fields = '__all__'
-
         read_only_fields = ['user', 'extracted_text', 'skills_found', 'score', 'created_at']
 
 class PostSerializer(serializers.ModelSerializer):
@@ -83,15 +82,22 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class CVTemplateSerializer(serializers.ModelSerializer):
+    """
+    ✅ SERIALIZER CHO CVTEMPLATE
+    - Hỗ trợ upload html_file + thumbnail
+    - Tự động xử lý file fields
+    """
     class Meta:
         model = CVTemplate
-        fields = "__all__"
-
-        read_only_fields = [
-            'user',
-            'extracted_text',
-            'skills_found',
-            'score',
+        fields = [
+            'id', 
+            'name', 
+            'description', 
+            'thumbnail', 
+            'html_content', 
+            'html_file', 
+            'is_active', 
             'created_at'
         ]
+        read_only_fields = ['id', 'created_at']
 

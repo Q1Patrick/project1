@@ -1,4 +1,6 @@
 import PyPDF2
+from jobs.serializers import JobSerializer
+import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -30,6 +32,10 @@ from django.contrib.auth import logout
 from rest_framework.authtoken.models import Token
 from django.db import IntegrityError
 from .models import Profile, CVAnalysis, Post, CVTemplate
+from django.shortcuts import get_object_or_404
+from jobs.models import Application, Job
+from cv_editor.models import UserCV
+from django.utils.html import strip_tags
 from .serializers import (
     UserSerializer,
     ProfileSerializer,
@@ -119,7 +125,13 @@ class ProfileAPI(APIView):
 
         return Response(serializer.errors, status=400)
 
+class AdminUserListAPI(APIView):
+    permission_classes = [IsAdminUser] # Chỉ Admin mới gọi được
 
+    def get(self, request):
+        users = User.objects.all().values('id', 'email', 'first_name', 'last_name', 'role', 'date_joined')
+        return Response(users)
+    
 # ===================== CV ANALYSIS =====================
 class CVUploadAnalyzeAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -193,6 +205,11 @@ class PostPublicAPI(APIView):
         return Response(PostSerializer(posts, many=True).data)
 
 class CVTemplateAdminAPI(APIView):
+    """
+    ✅ API LEGACY: ĐÃ CHUYỂN SANG cv_editor/views.py
+    - Hãy dùng AdminTemplateAPI ở cv_editor/urls.py thay vì đây
+    - Giữ lại để tránh break code cũ, nhưng không recommended
+    """
     permission_classes = [IsAdminUser]
     parser_classes = [MultiPartParser, FormParser]
 
@@ -207,7 +224,91 @@ class CVTemplateAdminAPI(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
+class DashboardStatsAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        cv_id = request.query_params.get('cv_id')
+        # 1. Đếm số việc đã ứng tuyển
+        applied_count = Application.objects.filter(candidate=user).count()
+        
+        # 2. Đếm số lịch phỏng vấn (Dựa theo status)
+        # Giả sử trong model Application bạn có status='interview' hoặc 'accepted'
+        interview_count = Application.objects.filter(
+            candidate=user, 
+            status__in=['interview', 'accepted'] # Các trạng thái được tính là phỏng vấn
+        ).count()
+        
+        # 3. Đếm số tin đã lưu (Nếu bạn chưa làm tính năng lưu job thì tạm để 0)
+        # saved_count = SavedJob.objects.filter(user=user).count()
+        saved_count = 0 
+
+        recommended_jobs = []
+        cv_text = ""
+
+        # TRƯỜNG HỢP A: User chọn cụ thể một CV Online (có cv_id)
+        if cv_id and cv_id != 'pdf':
+            try:
+                # Lấy CV online theo ID
+                online_cv = UserCV.objects.get(id=cv_id, user=user)
+                # Chuyển HTML thành Text (VD: <p>Python</p> -> Python)
+                cv_text = strip_tags(online_cv.html_content) 
+            except UserCV.DoesNotExist:
+                pass
+
+        # TRƯỜNG HỢP B: User chọn PDF (cv_id='pdf') hoặc mặc định dùng PDF nếu có
+        elif (cv_id == 'pdf') or (not cv_id and user.cv_file):
+            if user.cv_file:
+                try:
+                    pdf_path = user.cv_file.path
+                    if os.path.exists(pdf_path):
+                        reader = PyPDF2.PdfReader(pdf_path)
+                        for page in reader.pages:
+                            cv_text += page.extract_text() + " "
+                except Exception as e:
+                    print("Lỗi đọc PDF:", e)
+
+        # TRƯỜNG HỢP C: Không có gì cả -> Lấy CV Online mới nhất làm mặc định
+        if not cv_text:
+            latest_cv = UserCV.objects.filter(user=user).order_by('-updated_at').first()
+            if latest_cv:
+                cv_text = strip_tags(latest_cv.html_content)
+        
+        # 3. THUẬT TOÁN MATCHING (Giữ nguyên logic cũ)
+        if cv_text:
+            cv_text_lower = cv_text.lower()
+            all_jobs = Job.objects.filter(is_active=True)
+            scored_jobs = []
+
+            for job in all_jobs:
+                score = 0
+                if job.title.lower() in cv_text_lower: score += 10
+                if job.tags:
+                    tags_list = job.tags.split(',') if isinstance(job.tags, str) else job.tags
+                    for tag in tags_list:
+                        if tag.strip().lower() in cv_text_lower: score += 3
+                if score > 0: scored_jobs.append((job, score))
+            
+            scored_jobs.sort(key=lambda x: x[1], reverse=True)
+            top_jobs = [item[0] for item in scored_jobs[:4]]
+            recommended_jobs = JobSerializer(top_jobs, many=True).data
+
+        # Fallback
+        if not recommended_jobs:
+            recent_jobs = Job.objects.filter(is_active=True).order_by('-created_at')[:4]
+            recommended_jobs = JobSerializer(recent_jobs, many=True).data
+        return Response({
+            "applied": applied_count,
+            "interview": interview_count,
+            "saved": saved_count,
+            "recommended_jobs": recommended_jobs
+        })
+
 class CVTemplateDetailAdminAPI(APIView):
+    """
+    ✅ API LEGACY: ĐÃ CHUYỂN SANG cv_editor/views.py
+    """
     permission_classes = [IsAdminUser]
 
     def delete(self, request, pk):
@@ -215,6 +316,9 @@ class CVTemplateDetailAdminAPI(APIView):
         return Response(status=204)
 
 class CVTemplatePublicAPI(APIView):
+    """
+    ✅ API LEGACY: ĐÃ CHUYỂN SANG cv_editor/views.py (TemplateListAPI)
+    """
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -223,6 +327,7 @@ class CVTemplatePublicAPI(APIView):
 
 
 class SystemStatusAPI(APIView):
+    """✅ API THỐNG KÊ HỆ THỐNG (Chỉ Admin)"""
     permission_classes = [IsAdminUser]
 
     def get(self, request):
@@ -237,6 +342,7 @@ class SystemStatusAPI(APIView):
 
 
 class ReportSummaryAPI(APIView):
+    """✅ API BÁO CÁO HÔM NAY (Chỉ Admin)"""
     permission_classes = [IsAdminUser]
 
     def get(self, request):
@@ -248,11 +354,34 @@ class ReportSummaryAPI(APIView):
             "posts_published": Post.objects.filter(created_at__date=today).count(),
         }
         return Response(data)
+    
+class UserDetailAdminAPI(APIView):
+    permission_classes = [IsAdminUser] # Chỉ Admin mới được đụng vào
 
-        serializer = CVAnalysisSerializer(cv)
-        return Response(serializer.data, status=201)
-    
-    
+    # 1. Chức năng BLOCK / UNBLOCK (Dùng method PATCH)
+    def patch(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        
+        # Không cho phép tự block chính mình (Admin)
+        if user == request.user:
+            return Response({"error": "Không thể tự khóa tài khoản Admin của chính mình!"}, status=400)
+
+        # Đảo ngược trạng thái: Đang Active -> Banned, Đang Banned -> Active
+        user.is_active = not user.is_active
+        user.save()
+
+        status_text = "Active" if user.is_active else "Banned"
+        return Response({"message": f"Đã đổi trạng thái user thành {status_text}", "is_active": user.is_active})
+
+    # 2. Chức năng XÓA VĨNH VIỄN (Dùng method DELETE)
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        
+        if user == request.user:
+            return Response({"error": "Không thể tự xóa tài khoản Admin của chính mình!"}, status=400)
+
+        user.delete()
+        return Response({"message": "Đã xóa user vĩnh viễn"})
 
 def home_view(request):
     # KIỂM TRA: Nếu đã đăng nhập thì vào thẳng Dashboard thành công
@@ -437,4 +566,15 @@ def login_api(request):
             "user": serializer.data
         }, status=200)
     else:
-        return Response({"error": "Email hoặc mật khẩu không đúng!"}, status=400)
+        return Response({"error": "Email hoặc mật khẩu không đúng!"}, status=400)  
+
+@api_view(['PATCH']) # Hoặc PUT
+def edit_profile(request):
+    user = request.user
+    # 👇 Thêm tham số partial=True để cho phép update từng phần (chỉ up CV mà ko cần nhập tên)
+    serializer = UserSerializer(user, data=request.data, partial=True) 
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=400)

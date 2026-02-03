@@ -3,7 +3,18 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import permissions
 from .models import CVAnalysis
-from .utils import extract_text_from_pdf, analyze_cv, chat_with_cv
+
+# ⚠️ Tạm comment để tránh lỗi protobuf, sẽ uncomment sau
+# from .utils import extract_text_from_pdf, analyze_cv, chat_with_cv
+
+try:
+    from .utils import extract_text_from_pdf, analyze_cv, chat_with_cv
+except Exception as e:
+    print(f"⚠️ Lỗi import AI utilities: {e}")
+    # Fallback: Define dummy functions để migration chạy được
+    def extract_text_from_pdf(file): return ""
+    def analyze_cv(text): return {}
+    def chat_with_cv(cv_id, msg): return ""
 
 class AnalyzeCVView(APIView):
     permission_classes = [permissions.IsAuthenticated] # Phải đăng nhập mới được upload
@@ -58,3 +69,21 @@ class ChatCVView(APIView):
         bot_reply = chat_with_cv(cv_context, user_message)
 
         return Response({"reply": bot_reply})
+    
+class GetLatestCVView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Lấy bản ghi phân tích mới nhất của user
+            latest_cv = CVAnalysis.objects.filter(user=request.user).order_by('-created_at').first()
+            
+            if latest_cv:
+                # Trả về kết quả JSON (chứa score, summary...)
+                return Response(latest_cv.analysis_result, status=200)
+            else:
+                # Nếu chưa phân tích lần nào
+                return Response({"score": 0, "summary": "Chưa có dữ liệu"}, status=200)
+                
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

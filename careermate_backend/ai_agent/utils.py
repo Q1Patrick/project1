@@ -105,3 +105,4 @@ def chat_with_cv(cv_text, user_question):
         return response.text
     except Exception as e:
         return "Xin lỗi, Gemini đang bận. Thử lại sau nhé!"
+
