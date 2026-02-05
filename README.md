@@ -160,7 +160,7 @@ careermate/
 
 ### 1️⃣ Clone repository
 ```bash
-git clone https://github.com/your-username/careermate.git
+git clone https://github.com/Q1Patrick/project1.git
 cd careermate
 ```
 
